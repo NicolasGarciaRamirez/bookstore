@@ -29,8 +29,8 @@ Route::post('/carrito/añadircarrito', [carritoController::class, 'añadircarrit
 //index
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'showCard'])->name('home');
 
-Route::get('/view/login', [App\Http\Controllers\Auth\LoginController::class, 'index'])->name('login.view');
-Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'login'])->name('login');
+Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'index'])->name('login.view');
+Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login'])->name('login');
 Route::get('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
 Route::get('/view/register', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register.view');
 Route::get('/register', [App\Http\Controllers\Auth\RegisterController::class, 'register'])->name('register');
@@ -38,7 +38,7 @@ Route::get('/register', [App\Http\Controllers\Auth\RegisterController::class, 'r
 
 
 
-Route::get('authors', [AuthorController::class, 'index'])->name('author.index');
+Route::get('authors', [AuthorController::class, 'index'])->name('author.index')->middleware('auth');
 Route::group(['prefix' => 'author'], function () {
     Route::get('new', [AuthorController::class, 'create'])->name('author.create');
     Route::post('store', [AuthorController::class, 'store'])->name('author.store');
@@ -47,7 +47,7 @@ Route::group(['prefix' => 'author'], function () {
     Route::delete('delete/{author}', [AuthorController::class, 'destroy'])->name('author.destroy');
 });
 
-Route::get('publishers', [PublisherController::class, 'index'])->name('publisher.index');
+Route::get('publishers', [PublisherController::class, 'index'])->name('publisher.index')->middleware('auth');
 Route::group(['prefix' => 'publisher'], function () {
     Route::get('new', [PublisherController::class, 'create'])->name('publisher.create');
     Route::post('store', [PublisherController::class, 'store'])->name('publisher.store');
@@ -56,7 +56,7 @@ Route::group(['prefix' => 'publisher'], function () {
     Route::delete('delete/{publisher}', [PublisherController::class, 'destroy'])->name('publisher.delete');
 });
 
-Route::get('genres', [GenreController::class, 'index'])->name('genre.index');
+Route::get('genres', [GenreController::class, 'index'])->name('genre.index')->middleware('auth');
 Route::group(['prefix' => 'genre'], function () {
     Route::get('new', [GenreController::class, 'create'])->name('genre.create');
     Route::post('store', [GenreController::class, 'store'])->name('genre.store');
@@ -65,13 +65,13 @@ Route::group(['prefix' => 'genre'], function () {
     Route::delete('delete/{genre}', [GenreController::class, 'destroy'])->name('genre.delete');
 });
 
-Route::get('books', [BookController::class, 'index'])->name('book.index');
-Route::group(['prefix' => 'book'], function () {
-    Route::get('new', [BookController::class, 'create'])->name('book.create');
-    Route::post('store', [BookController::class, 'store'])->name('book.store');
-    Route::get('edit/{book}', [BookController::class, 'edit'])->name('book.edit');
-    Route::put('update/{book}', [BookController::class, 'update'])->name('book.update');
-    Route::delete('delete/{book}', [BookController::class, 'destroy'])->name('borrarBook');
+Route::group(['prefix' => 'books', 'as' => 'book.', 'middleware' => 'auth' ,'controller' => BookController::class], function () {
+    Route::get('/',  'index')->name('index');
+    Route::get('/new',  'create')->name('create');
+    Route::post('/store',  'store')->name('store');
+    Route::get('/edit/{book}',  'edit')->name('edit');
+    Route::post('/update/{book}',  'update')->name('update');
+    Route::delete('/delete/{book}',  'destroy')->name('delete');
 });
 
 

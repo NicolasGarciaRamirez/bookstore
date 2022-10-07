@@ -18,27 +18,6 @@
 <script>
 export default {
     props: ["books"],
-    // methods: {
-    //            async añadircarrito() {
-
-    //             let url = '/carrito/añadircarrito'
-    //             let res = null
-
-
-    //             if (!this.book.id){
-    //                 res = await axios.post(url, this.book)
-    //             }
-
-    //             console.log(this.id)
-    //             if (res.data.saved) {
-    //                         alert(`${res.data.message}`)
-    //                         if(!this.book.id){
-    //                         this.$parent.$parent.books_news.push(res.data.book)
-    //                         }
-    //                     }
-    //                     this.$parent.closeModal()
-    //             }
-    //         },
     data() {
         return {
 

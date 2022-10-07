@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\Genre;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\BookRequest;
 use App\Models\Author;
@@ -40,7 +41,7 @@ class BookController extends Controller
 
     /**
      * @param BookRequest $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function store(Request $request)
     {
@@ -72,7 +73,7 @@ class BookController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Book  $book
+     * @param Book $book
      * @return \Illuminate\Http\Response
      */
     public function show(Book $book)
@@ -83,7 +84,7 @@ class BookController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Book  $book
+     * @param Book $book
      * @return \Illuminate\Http\Response
      */
     public function edit(Book $book)
@@ -95,38 +96,48 @@ class BookController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Book  $book
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @param Book $book
+     * @return JsonResponse
      */
-    public function update(Request $request, Book $book)
+    public function update(BookRequest $request, Book $book): JsonResponse
     {
-        dd($request);
-        if ($request->hasFile('image')) {
-            $imageName = \Str::random(5). '.' . $request->image->getClientOriginalExtension();
-            request()->image->move(public_path('/images/books'), $imageName);
-        }
-        $request->image='/images/books'.$imageName;
-        $book->update($request->all());
+        DB::beginTransaction();
+        try {
+            $book->update($request->all());
 
-        return response()->json([
-            'saved'=> true,
-            'message' => 'libro actualizado con exito',
-            'book' => $book->load('genre', 'author','publisher')
-        ]);
+            if ($request->hasFile('image')) {
+                $imageName = \Str::random(5). '.' . $request->image->getClientOriginalExtension();
+                request()->image->move(public_path('/images/books/'), $imageName);
+                $imageNameComplete = '/images/books/'.$imageName;
+                $book->update(['image' => $imageNameComplete]);
+            }
+            DB::commit();
+            return response()->json([
+                'saved'=> true,
+                'message' => 'libro actualizado con exito',
+                'book' => $book->refresh()->load('genre', 'author','publisher')
+            ], 200);
+        }catch (\Exception $e){
+            DB::rollBack();
+            return response()->json([
+                'saved'=> false,
+                'message' => `ocurrio un error al guardar ${$e->getMessage()}`,
+                'book' => null
+            ], 500);
+        }
+
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Book  $book
-     * @return \Illuminate\Http\Response
+     * @param Book $book
+     * @return JsonResponse
      */
-    public function destroy(Book $book)
+    public function destroy(Book $book): JsonResponse
     {
         try {
-            $genres = DB::table('book_has_genres')->where('book_id', $book->id)->delete();
-            $authors = DB::table('author_has_books')->where('book_id', $book->id)->delete();
             $book->delete();
             return response()->json(['deleted' => true, 'message' => 'Libro borrado con exito!'], 200);
         } catch (\Exception $e) {
